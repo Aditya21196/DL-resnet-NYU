@@ -7,7 +7,7 @@ This repository contains the final model which has only 2.63 million parameters 
 4. Set c1=58. Subsequent values of ci are calculated by doubling
 5. Avg pool kernel size- 2
 6. Cross validation to narrow down highest accuracy touched
-7. Run for for 100 epochs
+7. Run for 100 epochs
 
 We tried other things like L2 regularization, Gradient Clipping, raytune etc. spanning a total of 70-80 different models and the above config gave best results
 
