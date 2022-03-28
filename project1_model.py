@@ -142,72 +142,79 @@ class Conf:
   def __repr__(self):
     return f'blocks_{"_".join("_".join([str(block) for block in self.blocks]))}_c1_{self.c1}_p_{self.p}'
 
-# best model conf
-confs_to_test = [Conf([3,10],58,2)]
 
-# can also add other confs to test like this:
-# confs_to_test = [Conf([3,10],58,2),Conf([2,3,3,2],40,1),Conf([4,6,8],42,1),Conf([4,4,4],58,1),Conf([3,10],80,4),Conf([8,16],60),Conf([2,2,2,2],30,4)]
 
 def project1_model():
     return ResNet(BasicBlock,num_blocks =[3,10],c1=58,p=2)
 
-for conf in confs_to_test: # iterate over configurations
-  model = ResNet(BasicBlock,num_blocks =conf.blocks,c1=conf.c1,p=conf.p).cuda()
 
-  net = model
-  Loss = torch.nn.CrossEntropyLoss()
-  optimizer = torch.optim.Adam(net.parameters(), lr=0.002)
+def main():
+  # best model conf
+  confs_to_test = [Conf([3,10],58,2)]
 
-  def count_parameters(model):
-      return sum(p.numel() for p in model.parameters() if p.requires_grad)
+  # can also add other confs to test like this:
+  # confs_to_test = [Conf([3,10],58,2),Conf([2,3,3,2],40,1),Conf([4,6,8],42,1),Conf([4,4,4],58,1),Conf([3,10],80,4),Conf([8,16],60),Conf([2,2,2,2],30,4)]
 
-  train_loss_history = []
-  test_loss_history = []
+  for conf in confs_to_test: # iterate over configurations
+    model = ResNet(BasicBlock,num_blocks =conf.blocks,c1=conf.c1,p=conf.p).cuda()
 
-  max_accuracy = 0
-  net_to_save = net.state_dict()
-  for epoch in range(100):
-    train_loss = 0.0
-    test_loss = 0.0
-    for i, data in enumerate(gen([trainDataLoaderTransform,trainDataLoaderSimple])): # combined data loaders
-      images, labels = data
-      images = images.cuda()
-      labels = labels.cuda()
-      optimizer.zero_grad()
-      predicted_output = net(images)
-      fit = Loss(predicted_output,labels)
+    net = model
+    Loss = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(net.parameters(), lr=0.002)
 
+    def count_parameters(model):
+        return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-      fit.backward()
-      optimizer.step()
-      train_loss += fit.item()
-    
-    correct = 0
-    total = 0
-    for i, data in enumerate(testDataLoader):
-      with torch.no_grad():
+    train_loss_history = []
+    test_loss_history = []
+
+    max_accuracy = 0
+    net_to_save = net.state_dict()
+    for epoch in range(100):
+      train_loss = 0.0
+      test_loss = 0.0
+      for i, data in enumerate(gen([trainDataLoaderTransform,trainDataLoaderSimple])): # combined data loaders
         images, labels = data
         images = images.cuda()
         labels = labels.cuda()
+        optimizer.zero_grad()
         predicted_output = net(images)
         fit = Loss(predicted_output,labels)
-        test_loss += fit.item()
-        predicted = torch.max(predicted_output.data, 1)
-        for i in range(len(labels)):
-            if labels[i] == predicted[1][i]:
-                correct += 1
-            total += 1
-    accuracy = correct/total
-    if accuracy>max_accuracy: # check for max accuracy
-      max_accuracy = accuracy
-      net_to_save = net.state_dict() # cross-validation: save the state for which test accuracy we maximum
-    max_accuracy = max(max_accuracy,accuracy)
 
 
-    train_loss = train_loss/(2*len(trainingdata_simple))
-    test_loss = test_loss/len(testDataLoader)
-    train_loss_history.append(train_loss)
-    test_loss_history.append(test_loss)
-    
-  print('max accuracy:',max_accuracy,'model',conf,'params',count_parameters(net)/1000000)
-  torch.save(net_to_save,f'{conf}.pt')
+        fit.backward()
+        optimizer.step()
+        train_loss += fit.item()
+      
+      correct = 0
+      total = 0
+      for i, data in enumerate(testDataLoader):
+        with torch.no_grad():
+          images, labels = data
+          images = images.cuda()
+          labels = labels.cuda()
+          predicted_output = net(images)
+          fit = Loss(predicted_output,labels)
+          test_loss += fit.item()
+          predicted = torch.max(predicted_output.data, 1)
+          for i in range(len(labels)):
+              if labels[i] == predicted[1][i]:
+                  correct += 1
+              total += 1
+      accuracy = correct/total
+      if accuracy>max_accuracy: # check for max accuracy
+        max_accuracy = accuracy
+        net_to_save = net.state_dict() # cross-validation: save the state for which test accuracy we maximum
+      max_accuracy = max(max_accuracy,accuracy)
+
+
+      train_loss = train_loss/(2*len(trainingdata_simple))
+      test_loss = test_loss/len(testDataLoader)
+      train_loss_history.append(train_loss)
+      test_loss_history.append(test_loss)
+      
+    print('max accuracy:',max_accuracy,'model',conf,'params',count_parameters(net)/1000000)
+    torch.save(net_to_save,f'{conf}.pt')
+
+if __name__ == "__main__":
+    main()
