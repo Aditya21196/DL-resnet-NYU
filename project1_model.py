@@ -6,34 +6,6 @@ import torch.nn.functional as F
 from torchvision import transforms
 import matplotlib.pyplot as plt
 
-mean = [0.49139968, 0.48215827 ,0.44653124]
-std = [0.24703233, 0.24348505, 0.26158768]
-
-# apply transforms
-transforms_train = transforms.Compose([
-    transforms.RandomHorizontalFlip(p=0.7),
-    transforms.RandomVerticalFlip(p=0.3), 
-    transforms.RandomRotation(10),
-    transforms.ToTensor(),
-    transforms.Normalize(mean, std),
-    transforms.RandomErasing(p=0.75,scale=(0.02, 0.1),value=1.0, inplace=False)
-])
-
-transforms_val = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize(mean, std)
-])
-
- # we are loading both: transformed and untransformed data
-trainingdata_transform = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transforms_train) 
-trainingdata_simple = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transforms_val)
-
-# make datasets
-trainDataLoaderTransform = torch.utils.data.DataLoader(trainingdata_transform,batch_size=64,shuffle=True)
-trainDataLoaderSimple = torch.utils.data.DataLoader(trainingdata_simple,batch_size=64,shuffle=True)
-
-testdata = torchvision.datasets.CIFAR10(root='./data',  train=False, download=True, transform=transforms_val)
-testDataLoader = torch.utils.data.DataLoader(testdata,batch_size=64,shuffle=False)
 
 
 # a function to combine data loaders
@@ -149,6 +121,37 @@ def project1_model():
 
 
 def main():
+
+
+  mean = [0.49139968, 0.48215827 ,0.44653124]
+  std = [0.24703233, 0.24348505, 0.26158768]
+
+  # apply transforms
+  transforms_train = transforms.Compose([
+      transforms.RandomHorizontalFlip(p=0.7),
+      transforms.RandomVerticalFlip(p=0.3), 
+      transforms.RandomRotation(10),
+      transforms.ToTensor(),
+      transforms.Normalize(mean, std),
+      transforms.RandomErasing(p=0.75,scale=(0.02, 0.1),value=1.0, inplace=False)
+  ])
+
+  transforms_val = transforms.Compose([
+      transforms.ToTensor(),
+      transforms.Normalize(mean, std)
+  ])
+
+  # we are loading both: transformed and untransformed data
+  trainingdata_transform = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transforms_train) 
+  trainingdata_simple = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transforms_val)
+
+  # make datasets
+  trainDataLoaderTransform = torch.utils.data.DataLoader(trainingdata_transform,batch_size=64,shuffle=True)
+  trainDataLoaderSimple = torch.utils.data.DataLoader(trainingdata_simple,batch_size=64,shuffle=True)
+
+  testdata = torchvision.datasets.CIFAR10(root='./data',  train=False, download=True, transform=transforms_val)
+  testDataLoader = torch.utils.data.DataLoader(testdata,batch_size=64,shuffle=False)
+  
   # best model conf
   confs_to_test = [Conf([3,10],58,2)]
 
